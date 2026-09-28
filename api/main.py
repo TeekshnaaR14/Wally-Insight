@@ -11,6 +11,8 @@ from .models.app import AppConfig, DEFAULT_CONFIG
 from .models.categories import Category, DEFAULT_CATEGORIES
 from .models.currency import Currency, DEFAULT_CURRENCIES
 
+from .models.budgets import Budget
+
 VERSION = "1.16"
 
 @asynccontextmanager
