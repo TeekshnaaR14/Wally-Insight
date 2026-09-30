@@ -133,7 +133,7 @@ class BudgetAPITests(unittest.TestCase):
         self.assertEqual(
             response.json()["detail"],
             "This category does not exist.",
-        )    
+        )
     def test_reject_duplicate_budget(self):
         first_response = client.post(
             "/budgets",
