@@ -70,17 +70,14 @@ async function loadBudgetProgress() {
     budgets.forEach((budget) => {
 
         const matchingTransactions = transactions.filter((transaction) => {
-            const transactionDate = new Date(transaction.date);
+            const [year, month] = transaction.date.split('-').map(Number);
 
-            const sameCategory =
-                transaction.category === budget.category;
+            const sameCategory = transaction.category === budget.category;
+            const isExpense = transaction.type === 'expense';
 
-            const isExpense =
-                transaction.type === 'expense';
-
-            const sameMonth =
-                transactionDate.getMonth() === today.getMonth() &&
-                transactionDate.getFullYear() === today.getFullYear();
+                const sameMonth =
+                        year === today.getFullYear() &&
+                        month === today.getMonth() + 1;
 
             return sameCategory && isExpense && sameMonth;
         });
