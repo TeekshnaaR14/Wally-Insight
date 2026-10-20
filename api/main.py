@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 
-from .database import create_db_and_tables, engine
+from .database import create_db_and_tables, ensure_budget_start_date, engine
 from .demo import generate_demo
 from .routers import (
     transactions,
@@ -36,6 +36,8 @@ async def lifespan(app: FastAPI):
     # Live version
     else:
         create_db_and_tables()
+        ensure_budget_start_date()
+
 
     # Init database session
     with Session(engine) as db:

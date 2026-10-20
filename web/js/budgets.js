@@ -35,23 +35,12 @@ async function logout() {
 }
 
 async function loadBudgetProgress() {
-    const [budgetResponse, transactionResponse] = await Promise.all([
-        fetch(`${API_URL}/budgets`, {
-            method: 'GET',
-            credentials: 'include',
-        }),
+    const response = await fetch(`${API_URL}/budgets`, {
+        method: 'GET',
+        credentials: 'include',
+    });
 
-        fetch(`${API_URL}/transactions`, {
-            method: 'GET',
-            credentials: 'include',
-        })
-    ]);
-
-    const budgets = await budgetResponse.json();
-    const transactions = await transactionResponse.json();
-
-    console.log('Budgets:', budgets);
-    console.log('Transactions:', transactions);
+    const budgets = await response.json();
 
     const budgetsContainer = document.getElementById('budgetsContainer');
     const emptyState = document.getElementById('emptyState');
@@ -65,34 +54,15 @@ async function loadBudgetProgress() {
 
     emptyState.style.display = 'none';
 
-    const today = new Date();
-
     budgets.forEach((budget) => {
-
-        const matchingTransactions = transactions.filter((transaction) => {
-            const [year, month] = transaction.date.split('-').map(Number);
-
-            const sameCategory = transaction.category === budget.category;
-            const isExpense = transaction.type === 'expense';
-
-                const sameMonth =
-                        year === today.getFullYear() &&
-                        month === today.getMonth() + 1;
-
-            return sameCategory && isExpense && sameMonth;
-        });
-
-        const spent = matchingTransactions.reduce((total, transaction) => {
-            return total + Number(transaction.amount);
-        }, 0);
-
+        const spent = Number(budget.spent);
         const limit = Number(budget.limit);
 
         const remaining = limit - spent;
         const remainingText =
-        remaining >= 0
-        ? `Remaining: $${remaining.toFixed(2)}`
-        : `Over budget by: $${Math.abs(remaining).toFixed(2)}`;
+            remaining >= 0
+                ? `Remaining: $${remaining.toFixed(2)}`
+                : `Over budget by: $${Math.abs(remaining).toFixed(2)}`;
 
         const percentage =
             limit > 0
@@ -108,12 +78,10 @@ async function loadBudgetProgress() {
         }
 
         const card = document.createElement('div');
-
         card.className = 'card mb-3';
 
         card.innerHTML = `
             <div class="card-body">
-
                 <h5 class="card-title">
                     ${budget.category}
                 </h5>
@@ -126,7 +94,7 @@ async function loadBudgetProgress() {
                     Spent: $${spent.toFixed(2)}
                 </p>
 
-               <p class="mb-1">
+                <p class="mb-1">
                     ${remainingText}
                 </p>
 
@@ -142,16 +110,14 @@ async function loadBudgetProgress() {
                         aria-valuenow="${percentage}"
                         aria-valuemin="0"
                         aria-valuemax="100">
-
                         ${percentage.toFixed(1)}%
-
                     </div>
                 </div>
 
                 <p class="mb-0 text-muted">
-                    Period: ${budget.period}
+                    Period: ${budget.period}<br>
+                    Window: ${budget.window_start} to ${budget.window_end}
                 </p>
-
             </div>
         `;
 

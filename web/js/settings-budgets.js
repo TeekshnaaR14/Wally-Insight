@@ -8,6 +8,7 @@
     const categoryInput = document.getElementById('budgetCategoryInput');
     const limitInput = document.getElementById('budgetLimitInput');
     const periodInput = document.getElementById('budgetPeriodInput');
+    const startDateInput = document.getElementById('budgetStartDateInput');
     const addButton = document.getElementById('budgetAddButton');
     const saveButton = document.getElementById('budgetSaveButton');
     const errorBox = document.getElementById('budgetFormError');
@@ -130,6 +131,7 @@
 
     modal.addEventListener('show.bs.modal', () => {
       form.reset();
+      startDateInput.value = new Date().toISOString().slice(0, 10);
       showError();
 
       refresh().catch(error => {
@@ -166,7 +168,8 @@
           body: JSON.stringify({
             category: categoryInput.value,
             limit: limitInput.value,
-            period: periodInput.value
+            period: periodInput.value,
+            start_date: startDateInput.value
           })
         });
 
