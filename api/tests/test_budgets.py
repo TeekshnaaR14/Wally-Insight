@@ -56,6 +56,8 @@ class BudgetAPITests(unittest.TestCase):
                 "category": "Food",
                 "limit": 400,
                 "period": "monthly",
+                "start_date": "2026-10-15",
+
             },
         )
 
@@ -63,6 +65,8 @@ class BudgetAPITests(unittest.TestCase):
         self.assertEqual(response.json()["category"], "Food")
         self.assertEqual(response.json()["limit"], "400.00")
         self.assertEqual(response.json()["period"], "monthly")
+        self.assertEqual(response.json()["start_date"], "2026-10-15")
+
 
         # Read
         response = client.get("/budgets/Food")
@@ -93,6 +97,7 @@ class BudgetAPITests(unittest.TestCase):
         response = client.get("/budgets/Food")
 
         self.assertEqual(response.status_code, 404)
+
     def test_reject_negative_limit(self):
         response = client.post(
             "/budgets",
@@ -100,6 +105,8 @@ class BudgetAPITests(unittest.TestCase):
                 "category": "Food",
                 "limit": -100,
                 "period": "monthly",
+                "start_date": "2026-10-15",
+
             },
         )
 
@@ -126,6 +133,8 @@ class BudgetAPITests(unittest.TestCase):
                 "category": "NotARealCategory",
                 "limit": 400,
                 "period": "monthly",
+                "start_date": "2026-10-15",
+
             },
         )
 
@@ -141,6 +150,8 @@ class BudgetAPITests(unittest.TestCase):
                 "category": "Food",
                 "limit": 400,
                 "period": "monthly",
+                "start_date": "2026-10-15",
+
             },
         )
 
