@@ -1,9 +1,27 @@
 from sqlmodel import Session, SQLModel, create_engine, text
+from sqlalchemy import inspect, text
 
 engine = create_engine("sqlite:///data/wally.db", connect_args={"check_same_thread": False})
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
+    inspector = inspect(engine)
+
+    if "recurringtransaction" in inspector.get_table_names():
+        columns = {
+            column["name"]
+            for column in inspector.get_columns("recurringtransaction")
+        }
+
+        if "isSubscription" not in columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        'ALTER TABLE recurringtransaction '
+                        'ADD COLUMN "isSubscription" BOOLEAN NOT NULL DEFAULT 0'
+                    )
+                )
 
 def ensure_budget_start_date():
     from .models.budgets import Budget

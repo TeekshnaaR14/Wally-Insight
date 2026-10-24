@@ -17,6 +17,7 @@ from .routers import (
     api_keys,
     budgets,
     spending_history,
+    subscriptions,
 )
 from .models.app import AppConfig, DEFAULT_CONFIG
 from .models.categories import Category, DEFAULT_CATEGORIES
@@ -37,7 +38,6 @@ async def lifespan(app: FastAPI):
     else:
         create_db_and_tables()
         ensure_budget_start_date()
-
 
     # Init database session
     with Session(engine) as db:
@@ -72,7 +72,10 @@ app = FastAPI(
 # Allow your dev frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://127.0.0.1:8080",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,6 +91,7 @@ app.include_router(auth.router)
 app.include_router(api_keys.router)
 app.include_router(budgets.router)
 app.include_router(spending_history.router)
+app.include_router(subscriptions.router)
 
 
 # Add root route
