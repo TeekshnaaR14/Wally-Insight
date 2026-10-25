@@ -18,11 +18,13 @@ from .routers import (
     budgets,
     spending_history,
     subscriptions,
+    budget_alerts,
 )
 from .models.app import AppConfig, DEFAULT_CONFIG
 from .models.categories import Category, DEFAULT_CATEGORIES
 from .models.currency import Currency, DEFAULT_CURRENCIES
 from .models.budgets import Budget
+from .services.budget_alerts import create_scheduler
 
 
 VERSION = "1.16"
@@ -58,7 +60,13 @@ async def lifespan(app: FastAPI):
                 db.add(Currency(**item))
         db.commit()
 
+    # Start the background job that raises budget alerts
+    scheduler = create_scheduler()
+    scheduler.start()
+
     yield  # App is running
+
+    scheduler.shutdown(wait=False)
 
 
 # Init FastAPI
@@ -92,6 +100,7 @@ app.include_router(api_keys.router)
 app.include_router(budgets.router)
 app.include_router(spending_history.router)
 app.include_router(subscriptions.router)
+app.include_router(budget_alerts.router)
 
 
 # Add root route
