@@ -2,9 +2,99 @@ const API_URL = '/api';
 
 document.addEventListener('DOMContentLoaded', () => main());
 
+const ALERT_REFRESH_MS = 60 * 1000;
+
+let warningThreshold = 80;
+
 async function main() {
     await checkLogin();
-    await loadBudgetProgress();
+    await loadWarningThreshold();
+    await Promise.all([loadBudgetAlerts(), loadBudgetProgress()]);
+
+    // Pick up alerts raised by the background job while the page is open
+    setInterval(() => {
+        loadBudgetAlerts();
+        loadBudgetProgress();
+    }, ALERT_REFRESH_MS);
+}
+
+async function loadWarningThreshold() {
+    try {
+        const response = await fetch(`${API_URL}/budget-alerts/settings`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (response.ok) {
+            warningThreshold = (await response.json()).warning_threshold;
+        }
+    } catch (error) {
+        console.error('Could not load the budget warning threshold', error);
+    }
+}
+
+async function loadBudgetAlerts() {
+    const container = document.getElementById('budgetAlertsContainer');
+
+    let alerts;
+    try {
+        const response = await fetch(`${API_URL}/budget-alerts`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (!response.ok) return;
+        alerts = await response.json();
+    } catch (error) {
+        console.error('Could not load budget alerts', error);
+        return;
+    }
+
+    container.replaceChildren();
+
+    alerts.forEach((alert) => {
+        const overBudget = alert.level === 'over_budget';
+        const spent = Number(alert.spent);
+        const limit = Number(alert.limit);
+
+        const box = document.createElement('div');
+        box.className = `alert ${overBudget ? 'alert-danger' : 'alert-warning'} alert-dismissible budget-alert mb-3`;
+        box.setAttribute('role', 'alert');
+
+        const title = document.createElement('strong');
+        title.textContent = overBudget
+            ? `Over budget: ${alert.category}`
+            : `${alert.threshold}% of budget reached: ${alert.category}`;
+
+        const details = document.createElement('div');
+        details.textContent =
+            `Spent $${spent.toFixed(2)} of $${limit.toFixed(2)} ` +
+            `(${alert.period}, ${alert.window_start} to ${alert.window_end}).`;
+
+        const hint = document.createElement('div');
+        hint.className = 'small';
+        hint.textContent = overBudget
+            ? 'You have gone over this budget. Consider stopping spending in this category.'
+            : 'You are getting close to this budget. Consider slowing down.';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-close';
+        closeButton.setAttribute('aria-label', 'Dismiss');
+        closeButton.addEventListener('click', () => dismissBudgetAlert(alert.id, box));
+
+        box.append(title, details, hint, closeButton);
+        container.appendChild(box);
+    });
+}
+
+async function dismissBudgetAlert(alertId, element) {
+    const response = await fetch(`${API_URL}/budget-alerts/${alertId}/dismiss`, {
+        method: 'POST',
+        credentials: 'include',
+    });
+
+    if (response.ok) {
+        element.remove();
+    }
 }
 
 async function checkLogin() {
@@ -73,7 +163,7 @@ async function loadBudgetProgress() {
 
         if (percentage >= 100) {
             progressClass = 'bg-danger';
-        } else if (percentage >= 80) {
+        } else if (percentage >= warningThreshold) {
             progressClass = 'bg-warning';
         }
 

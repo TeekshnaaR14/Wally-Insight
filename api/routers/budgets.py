@@ -11,6 +11,7 @@ from ..services.budget_period import current_window, in_window
 
 from ..database import get_session
 from ..models.budgets import Budget, BudgetCreate, BudgetPublic, BudgetUpdate
+from ..models.budget_alerts import BudgetAlert
 from ..models.categories import Category
 from .auth import check_login
 
@@ -117,6 +118,10 @@ def delete_budget(
 
     if not budget:
         raise HTTPException(status_code=404, detail="This budget does not exist.")
+
+    # Remove the alerts of the deleted budget as well
+    for alert in db.exec(select(BudgetAlert).where(BudgetAlert.category == category_name)).all():
+        db.delete(alert)
 
     db.delete(budget)
     db.commit()
