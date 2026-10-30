@@ -1,12 +1,18 @@
 import unittest
 
+from datetime import date
+from decimal import Decimal
+from unittest.mock import patch
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import SQLModel, Session, create_engine, select
 
 from api.database import get_session
+from api.models.budgets import Budget
 from api.models.categories import Category
+from api.models.transactions import Transaction
 from api.routers.auth import check_login
 from api.routers.budgets import router as budgets_router
 
@@ -33,6 +39,7 @@ test_app.dependency_overrides[get_session] = get_test_session
 test_app.dependency_overrides[check_login] = skip_login
 
 client = TestClient(test_app)
+
 
 class BudgetAPITests(unittest.TestCase):
 
@@ -143,6 +150,7 @@ class BudgetAPITests(unittest.TestCase):
             response.json()["detail"],
             "This category does not exist.",
         )
+
     def test_reject_duplicate_budget(self):
         first_response = client.post(
             "/budgets",
@@ -174,3 +182,45 @@ class BudgetAPITests(unittest.TestCase):
 
         # Clean up so this test does not affect other tests.
         client.delete("/budgets/Food")
+
+    def test_budgets_return_projection(self):
+        # Seed a monthly budget and one known expense inside its window.
+        with Session(test_engine) as session:
+            session.add(Budget(
+                category="Food",
+                limit=Decimal("400"),
+                period="monthly",
+                start_date=date(2026, 10, 1),
+            ))
+            session.add(Transaction(
+                name="groceries",
+                category="Food",
+                amount=Decimal("150"),
+                type="expense",
+                date=date(2026, 10, 10),
+            ))
+            session.commit()
+
+        # Freeze "today" so the expected projection is hand-calculable:
+        # 15 elapsed days, 31 total days, 150 / 15 * 31 = 310.00
+        with patch("api.routers.budgets.date") as mock_date:
+            mock_date.today.return_value = date(2026, 10, 15)
+            response = client.get("/budgets")
+
+        self.assertEqual(response.status_code, 200)
+        data = next(b for b in response.json() if b["category"] == "Food")
+        self.assertEqual(data["spent"], "150.00")
+        self.assertEqual(data["projected_month_end"], "310.00")
+
+        # Clean up so this test does not affect other tests.
+        client.delete("/budgets/Food")
+        with Session(test_engine) as session:
+            for txn in session.exec(
+                select(Transaction).where(Transaction.category == "Food")
+            ).all():
+                session.delete(txn)
+            session.commit()
+
+
+if __name__ == "__main__":
+    unittest.main()
