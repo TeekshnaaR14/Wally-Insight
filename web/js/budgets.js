@@ -167,6 +167,13 @@ async function loadBudgetProgress() {
             progressClass = 'bg-warning';
         }
 
+        const projected = Number(budget.projected_month_end);
+        const forecastOverBudget = !Number.isNaN(projected) && projected > limit;
+
+        const forecastText = budget.projected_month_end == null
+                ? 'Forecast: not enough data yet'
+                : `Forecast at end of period: $${projected.toFixed(2)}${forecastOverBudget ? ' — over budget!' : ''}`;
+
         const card = document.createElement('div');
         card.className = 'card mb-3';
 
@@ -191,7 +198,7 @@ async function loadBudgetProgress() {
                 <p class="mb-1">
                     Used: ${percentage.toFixed(1)}%
                 </p>
-
+                
                 <div class="progress mb-3" style="height: 22px;">
                     <div
                         class="progress-bar ${progressClass}"
@@ -203,6 +210,8 @@ async function loadBudgetProgress() {
                         ${percentage.toFixed(1)}%
                     </div>
                 </div>
+
+                <p class="mb-1 ${forecastOverBudget ? 'text-danger' : 'text-muted'}">${forecastText}</p>
 
                 <p class="mb-0 text-muted">
                     Period: ${budget.period}<br>

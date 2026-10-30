@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 from ..models.transactions import Transaction
 from ..services.budget_period import current_window, in_window
+from ..services.budget_forecast import forecast_month_end
 
 
 from ..database import get_session
@@ -23,6 +24,7 @@ class BudgetWithProgress(BudgetPublic):
     window_start: date
     window_end: date
     spent: Decimal
+    projected_month_end: Decimal | None = None
 
 @router.get("/budgets", response_model=list[BudgetWithProgress])
 def read_budgets(db: Annotated[Session, Depends(get_session)]):
@@ -40,6 +42,8 @@ def read_budgets(db: Annotated[Session, Depends(get_session)]):
              and in_window(transaction.date, window_start, window_end)),
             Decimal("0.00"),
         )
+        projected = forecast_month_end(spent, window_start, window_end, today)
+
         result.append(BudgetWithProgress(
             category=budget.category,
             limit=budget.limit,
@@ -48,6 +52,7 @@ def read_budgets(db: Annotated[Session, Depends(get_session)]):
             window_start=window_start,
             window_end=window_end,
             spent=spent,
+            projected_month_end=projected,
         ))
     return result
 
