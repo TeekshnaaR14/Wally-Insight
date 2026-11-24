@@ -19,6 +19,7 @@ from .routers import (
     spending_history,
     subscriptions,
     budget_alerts,
+    insights,
 )
 from .models.app import AppConfig, DEFAULT_CONFIG
 from .models.categories import Category, DEFAULT_CATEGORIES
@@ -101,6 +102,7 @@ app.include_router(budgets.router)
 app.include_router(spending_history.router)
 app.include_router(subscriptions.router)
 app.include_router(budget_alerts.router)
+app.include_router(insights.router)
 
 
 # Add root route

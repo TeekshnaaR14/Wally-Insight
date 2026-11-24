@@ -18,6 +18,14 @@ def shift_month(month_start: date, offset: int) -> date:
     return date(year, month_zero_based + 1, 1)
 
 
+def expense_amounts_between(start: date, end_exclusive: date):
+    return select(Transaction.category, Transaction.amount, Transaction.date).where(
+        Transaction.type == "expense",
+        Transaction.date >= start,
+        Transaction.date < end_exclusive,
+    )
+
+
 def get_spending_history(
     db: Session,
     category: str,
@@ -30,24 +38,12 @@ def get_spending_history(
     end = today.replace(day=1)
     start = shift_month(end, -months)
 
-    statement = select(Transaction).where(
-        Transaction.category == category,
-        Transaction.type == "expense",
-        Transaction.date >= start,
-        Transaction.date < end,
-    )
-
-    transactions = db.exec(statement).all()
-
+    statement = expense_amounts_between(start, end).where(Transaction.category == category)
     totals: dict[date, Decimal] = {}
 
-    for transaction in transactions:
-        month = transaction.date.replace(day=1)
-
-        totals[month] = (
-            totals.get(month, Decimal("0.00"))
-            + transaction.amount
-        )
+    for _, amount, transaction_date in db.exec(statement):
+        month = transaction_date.replace(day=1)
+        totals[month] = totals.get(month, Decimal("0.00")) + amount
 
     history = []
 

@@ -133,3 +133,42 @@ Wally has been built using [ExpenseOwl](https://github.com/Tanq16/ExpenseOwl) as
 - **API Keys management**: When login is enabled, users can create and manage API keys directly from the Settings page. This allows secure, token-based access to Wally's API for external integrations and automation.
 
 - **Internationalization**: Wally supports translation into over 10 languages, making it accessible to users worldwide. 
+
+## Personalized insights
+
+Open **Insights** from the Wally navigation. Wally calculates these results locally
+from its own database. The page refreshes when opened or refocused, and every
+minute while it is visible.
+
+- **Top spending this month** shows the three largest expense totals by category
+  from the start of the month through today.
+- **Biggest spending change** compares the same number of elapsed days in this
+  month and last month, capped by the shorter period. It shows the category
+  with the largest absolute change when both periods contain expenses and at least
+  one category changed.
+- **Budget closest to its limit** shows the budget with the highest share of
+  its limit used, including budgets already over their limit. It uses the
+  budget’s weekly or monthly window, counts expenses through today, and shows
+  the existing end-of-period forecast when available.
+- **Estimated monthly subscription cost** uses the Bills & Subscriptions
+  monthly estimate for recurring expenses marked as subscriptions with a
+  remaining scheduled charge.
+
+Cards appear as data becomes available. A fresh account with no expenses or
+subscriptions shows an empty state. Amounts use the configured Wally currency.
+
+### Demo and verification
+
+From a fresh local instance, open **Insights** to see the empty state. Add
+two Food expenses for 20 and 75, one on the first day of last month and one
+on the first day of this month. Add a monthly Food budget with a limit of
+100 and a quarterly recurring subscription for 36. Use a different category
+or a future start date for the subscription to keep the Food totals isolated.
+Return to **Insights**. Food should show 75 this month, a 55 increase from
+last month, and 75 of 100 used. The subscription estimate should be 12 per
+month. Add another Food expense for 7 and return to **Insights** to see 82
+in spending and budget usage.
+
+Run the backend tests from the repository root with
+`python -m pip install -r api/requirements.txt pytest` followed by
+`python -m pytest api/tests`.
