@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 
 from .database import create_db_and_tables, ensure_budget_start_date, engine
 from .demo import generate_demo
+from .routers import assistant
 from .routers import (
     transactions,
     recurring_transactions,
@@ -96,6 +97,7 @@ app.include_router(categories.router)
 app.include_router(tags.router)
 app.include_router(currency.router)
 app.include_router(auth.router)
+app.include_router(assistant.router)
 app.include_router(api_keys.router)
 app.include_router(budgets.router)
 app.include_router(spending_history.router)
