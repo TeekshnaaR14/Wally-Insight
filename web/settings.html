@@ -27,6 +27,7 @@
   <script src="js/icons.js" defer></script>
   <script src="js/i18n.js"></script>
   <script src="/js/settings-budgets.js"></script>
+  <script src="/js/settings-assistant.js"></script>
 
   <script>
     (function() {
@@ -250,6 +251,99 @@
               <option value="pt">Português</option>
               <option value="ru">Русский</option>
             </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row: AI Assistant -->
+    <div class="row" id="assistantSettings" style="scroll-margin-top: 90px">
+      <div class="col-12 mt-3">
+        <div class="card">
+          <div class="card-header d-flex align-items-center flex-wrap gap-2" style="font-weight: 500">
+            <span>AI Assistant</span>
+            <span id="assistantBadge" class="badge text-bg-secondary"></span>
+          </div>
+          <div class="card-body">
+            <p class="card-text" style="font-size: 0.9rem">
+              Choose which AI model answers questions in the <strong>Ask Wally</strong> chat.
+              A local model runs on this computer, so your data never leaves it.
+            </p>
+
+            <div class="btn-group mb-3" role="group" aria-label="AI provider">
+              <input type="radio" class="btn-check" name="assistantProvider" id="assistantProviderOllama" value="ollama" autocomplete="off">
+              <label class="btn btn-outline-primary" for="assistantProviderOllama" style="font-size: 0.9rem">Local model (Ollama)</label>
+              <input type="radio" class="btn-check" name="assistantProvider" id="assistantProviderApi" value="api" autocomplete="off">
+              <label class="btn btn-outline-primary" for="assistantProviderApi" style="font-size: 0.9rem">External API</label>
+            </div>
+
+            <div id="assistantOllamaSection">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="assistantOllamaUrl" class="form-label" style="font-size: 0.9rem">Ollama URL</label>
+                  <input id="assistantOllamaUrl" type="url" class="form-control" placeholder="http://localhost:11434" style="font-size: 0.9rem">
+                </div>
+                <div class="col-md-6">
+                  <label for="assistantOllamaModel" class="form-label" style="font-size: 0.9rem">Model</label>
+                  <div class="input-group">
+                    <select id="assistantOllamaModel" class="form-select" style="font-size: 0.9rem"></select>
+                    <button id="assistantRefreshModels" type="button" class="btn btn-outline-secondary" style="font-size: 0.9rem">Refresh</button>
+                  </div>
+                  <div id="assistantOllamaInfo" class="form-text"></div>
+                </div>
+              </div>
+
+              <div class="mt-4 mb-2" style="font-size: 0.95rem; font-weight: 500">Download a model</div>
+              <p id="assistantMemoryInfo" class="small text-muted mb-2"></p>
+              <div id="assistantRecommended" class="list-group mb-3"></div>
+              <label for="assistantCustomModel" class="form-label small mb-1">Or download any model by name (see ollama.com/library)</label>
+              <div class="input-group" style="max-width: 480px">
+                <input id="assistantCustomModel" type="text" class="form-control" placeholder="e.g. mistral:7b" style="font-size: 0.9rem">
+                <button id="assistantPullCustom" type="button" class="btn btn-outline-primary" style="font-size: 0.9rem">Download</button>
+              </div>
+              <div id="assistantPullProgress" class="mt-3" style="max-width: 480px" hidden>
+                <div id="assistantPullText" class="small mb-1"></div>
+                <div class="progress" style="height: 8px">
+                  <div id="assistantPullBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="assistantApiSection" hidden>
+              <div class="alert alert-warning small" role="note">
+                With an external API, a summary of your finances (category totals, budgets and subscriptions)
+                is sent to that service every time you ask a question. Choose a local model to keep everything on this computer.
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="assistantApiPreset" class="form-label" style="font-size: 0.9rem">Service</label>
+                  <select id="assistantApiPreset" class="form-select" style="font-size: 0.9rem"></select>
+                </div>
+                <div class="col-md-8">
+                  <label for="assistantApiUrl" class="form-label" style="font-size: 0.9rem">API base URL</label>
+                  <input id="assistantApiUrl" type="url" class="form-control" placeholder="https://api.example.com/v1" style="font-size: 0.9rem">
+                  <div class="form-text">Any service with an OpenAI-compatible <code>/chat/completions</code> endpoint.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="assistantApiModel" class="form-label" style="font-size: 0.9rem">Model</label>
+                  <input id="assistantApiModel" type="text" class="form-control" placeholder="Model name from the service" style="font-size: 0.9rem">
+                </div>
+                <div class="col-md-6">
+                  <label for="assistantApiKey" class="form-label" style="font-size: 0.9rem">API key</label>
+                  <input id="assistantApiKey" type="password" class="form-control" autocomplete="off" style="font-size: 0.9rem">
+                  <div class="form-check mt-1" id="assistantApiKeyClearWrap" hidden>
+                    <input class="form-check-input" type="checkbox" id="assistantApiKeyClear">
+                    <label class="form-check-label small" for="assistantApiKeyClear">Remove the saved key</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+              <button id="assistantSave" type="button" class="btn btn-sm btn-primary">Save</button>
+              <button id="assistantTest" type="button" class="btn btn-sm btn-outline-secondary">Test connection</button>
+            </div>
+            <p id="assistantStatus" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
           </div>
         </div>
       </div>
@@ -911,5 +1005,6 @@
   </div>
 
   <script src="js/settings.js"></script>
+  <script src="/js/assistant-widget.js" defer></script>
 </body>
 </html>

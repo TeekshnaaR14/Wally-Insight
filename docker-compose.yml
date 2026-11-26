@@ -1,0 +1,46 @@
+# Wally + local AI assistant (Ollama)
+#   docker compose up -d --build
+#   open http://localhost:8080
+# The assistant model can be changed or downloaded in Settings → AI Assistant.
+
+services:
+  wally:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/wally/data
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.2:3b
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.20.2
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    # Only reachable by Wally; not published to the host or the internet.
+    # To use an NVIDIA GPU (needs the NVIDIA Container Toolkit), uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # Downloads the default model once; it is kept in the "ollama" volume.
+  ollama-init:
+    image: ollama/ollama:0.20.2
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["ollama", "pull", "llama3.2:3b"]
+    depends_on:
+      - ollama
+    restart: on-failure:5
+
+volumes:
+  ollama:
